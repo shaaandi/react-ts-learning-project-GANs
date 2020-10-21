@@ -1,8 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Upload, Row, Col, Button, Spin } from 'antd';
 import ImgCrop from 'antd-img-crop';
-import { InboxOutlined } from '@ant-design/icons';
 import { iWhatIfContext } from '../screens/WhatIf';
 import { RcFile } from 'antd/lib/upload';
 
@@ -10,13 +9,7 @@ interface iProps {
     context: iWhatIfContext;
 }
 
-interface iPreviewImg {
-    show: boolean;
-}
-
-const PreviewImg = styled.image<iPreviewImg>`
-    display: ${({ show }) => (show ? 'block' : 'none')};
-`;
+const UploadWrapper = styled.div``;
 
 var same = function (str: string, callback: (a: string) => void) {
     setTimeout(function () {
@@ -33,22 +26,6 @@ let fakeFetch = () => {
 const Uploader: React.FC<iProps> = ({ context }) => {
     const { uploadFile } = context;
     const [loading, setLoading] = useState<boolean>(false);
-    const previewRef = useRef(null);
-
-    // const onPreview = async (file: any) => {
-    // let src = file.url;
-    // if (!src) {
-    //     src = await new Promise((resolve) => {
-    //         const reader = new FileReader();
-    //         reader.readAsDataURL(file.originFileObj);
-    //         reader.onload = () => resolve(reader.result);
-    //     });
-    // }
-    //     const image = new Image();
-    //     image.src = src;
-    //     const imgWindow = window.open(src)!;
-    //     imgWindow.document.write(image.outerHTML);
-    // };
 
     useEffect(() => {
         if (uploadFile) {
@@ -58,21 +35,23 @@ const Uploader: React.FC<iProps> = ({ context }) => {
     }, [uploadFile]);
 
     const handleUpload = async (choice: string) => {
-        // const formData = new FormData();
-        // formData.append('file', uploadFile);
-        // formData.append('choice', choice);
-        setLoading(true);
-        fakeFetch().then(() => {
-            // here we can fake the request;
-            // we retuned with a url of the result
-            setLoading(false);
-            context.updateContext((p) => ({
-                ...p,
-                choice,
-                preview:
-                    'https://cdn.pixabay.com/photo/2017/10/31/07/49/horses-2904536_960_720.jpg',
-            }));
-        });
+        if (uploadFile && choice) {
+            const formData = new FormData();
+            formData.append('file', context.uploadFile as RcFile);
+            formData.append('choice', choice);
+            setLoading(true);
+            fakeFetch().then(() => {
+                // here we can fake the request;
+                // we retuned with a url of the result
+                setLoading(false);
+                context.updateContext((p) => ({
+                    ...p,
+                    choice,
+                    preview:
+                        'https://cdn.pixabay.com/photo/2017/10/31/07/49/horses-2904536_960_720.jpg',
+                }));
+            });
+        }
     };
 
     const handleLoadImage = (file: RcFile) => {
@@ -88,19 +67,19 @@ const Uploader: React.FC<iProps> = ({ context }) => {
         {
             title: 'Male',
             id: 'male',
-            layout: { xs: 8 },
+            layout: { xs: 5 },
             onClick: () => handleUpload('male'),
         },
         {
             title: 'Female',
             id: 'female',
-            layout: { xs: 8 },
+            layout: { xs: 5 },
             onClick: () => handleUpload('female'),
         },
         {
             title: 'Old',
             id: 'old',
-            layout: { xs: 8 },
+            layout: { xs: 5 },
             onClick: () => handleUpload('old'),
         },
     ];
@@ -108,42 +87,61 @@ const Uploader: React.FC<iProps> = ({ context }) => {
     return (
         <Row>
             <Col xs={24} style={{ marginBottom: '20px' }}>
-                <Row justify="center">
+                <Row
+                    align="middle"
+                    style={{
+                        flexDirection: 'column',
+                        ...(!uploadFile
+                            ? {
+                                  height: '250px',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                              }
+                            : {}),
+                    }}
+                >
                     {uploadFile && (
                         <img id="output" width="60%" alt="uploaded preview" />
                     )}
-                    {true && (
-                        <div style={{ width: '60%' }}>
-                            <ImgCrop rotate>
-                                <Upload
-                                    fileList={
-                                        uploadFile ? [uploadFile as RcFile] : []
-                                    }
-                                    beforeUpload={handleLoadImage}
-                                    onRemove={handleRemove}
-                                >
-                                    {!uploadFile && '+ Upload'}
-                                </Upload>
-                            </ImgCrop>
-                        </div>
-                    )}
+                    <UploadWrapper>
+                        <ImgCrop rotate>
+                            <Upload
+                                fileList={
+                                    uploadFile ? [uploadFile as RcFile] : []
+                                }
+                                beforeUpload={handleLoadImage}
+                                onRemove={handleRemove}
+                            >
+                                {!uploadFile && (
+                                    <Button disabled={loading}>+ Upload</Button>
+                                )}
+                            </Upload>
+                        </ImgCrop>
+                    </UploadWrapper>
                 </Row>
             </Col>
-            {submitButtons.map(({ title, id, onClick, layout }) => (
-                <Col {...layout} key={id}>
-                    <Button
-                        type="primary"
-                        onClick={onClick}
-                        disabled={!uploadFile}
-                        style={{
-                            margin: '15px 0px',
-                        }}
-                        block
-                    >
-                        {title}
-                    </Button>
-                </Col>
-            ))}
+            <Col xs={24}>
+                <Row justify="center">
+                    {submitButtons.map(({ title, id, onClick, layout }) => (
+                        <Col
+                            {...layout}
+                            key={id}
+                            style={{
+                                margin: '15px 10px',
+                            }}
+                        >
+                            <Button
+                                type="primary"
+                                onClick={onClick}
+                                disabled={!uploadFile || loading}
+                                block
+                            >
+                                {title}
+                            </Button>
+                        </Col>
+                    ))}
+                </Row>
+            </Col>
         </Row>
     );
 };

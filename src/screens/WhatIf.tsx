@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Row, Col } from 'antd';
-import { Header, Uploader } from '../components';
+import { Row, Col, Divider } from 'antd';
+import { Header, Uploader, Preview } from '../components';
 import { RcFile } from 'antd/lib/upload';
 
 export interface iWhatIfContextState {
@@ -39,12 +39,28 @@ const WhatIf = () => {
                                 {(value) => <Header context={value} />}
                             </Context.Consumer>
                         </Col>
-                        <Col xs={12}>
+                        <Col xs={11}>
                             <Context.Consumer>
                                 {(value) => <Uploader context={value} />}
                             </Context.Consumer>
                         </Col>
-                        <Col xs={12}>{/* here will be our preview */}</Col>
+                        <Col
+                            xs={2}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Divider
+                                type="vertical"
+                                style={{ borderWidth: '2px', height: '100%' }}
+                            />
+                        </Col>
+                        <Col xs={11}>
+                            <Context.Consumer>
+                                {(value) => <Preview context={value} />}
+                            </Context.Consumer>
+                        </Col>
                     </Row>
                 </Col>
             </Row>
