@@ -1,31 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
-import { Upload, Row, Col, Button, Spin } from 'antd';
+import { Upload, Row, Col, Button } from 'antd';
 import ImgCrop from 'antd-img-crop';
-import { iWhatIfContext } from '../screens/WhatIf';
 import { RcFile } from 'antd/lib/upload';
-
-interface iProps {
-    context: iWhatIfContext;
-}
+import { useUploadContext } from '../contexts/hooks';
 
 const UploadWrapper = styled.div``;
 
-var same = function (str: string, callback: (a: string) => void) {
-    setTimeout(function () {
-        callback(str);
-    }, 3000);
-};
-
-let fakeFetch = () => {
-    return new Promise((res, rej) => {
-        same('full', (s: string) => res(s));
-    });
-};
-
-const Uploader: React.FC<iProps> = ({ context }) => {
-    const { uploadFile } = context;
-    const [loading, setLoading] = useState<boolean>(false);
+const Uploader: React.FC = () => {
+    const { updateContext, file: uploadFile } = useUploadContext();
 
     useEffect(() => {
         if (uploadFile) {
@@ -34,55 +17,14 @@ const Uploader: React.FC<iProps> = ({ context }) => {
         }
     }, [uploadFile]);
 
-    const handleUpload = async (choice: string) => {
-        if (uploadFile && choice) {
-            const formData = new FormData();
-            formData.append('file', context.uploadFile as RcFile);
-            formData.append('choice', choice);
-            setLoading(true);
-            fakeFetch().then(() => {
-                // here we can fake the request;
-                // we retuned with a url of the result
-                setLoading(false);
-                context.updateContext((p) => ({
-                    ...p,
-                    choice,
-                    preview:
-                        'https://cdn.pixabay.com/photo/2017/10/31/07/49/horses-2904536_960_720.jpg',
-                }));
-            });
-        }
-    };
-
     const handleLoadImage = (file: RcFile) => {
-        context.updateContext((p) => ({ ...p, uploadFile: file }));
+        updateContext((p) => ({ ...p, file: file }));
         return false;
     };
 
     const handleRemove = () => {
-        context.updateContext((p) => ({ ...p, uploadFile: false }));
+        updateContext((p) => ({ ...p, file: false }));
     };
-
-    const submitButtons = [
-        {
-            title: 'Male',
-            id: 'male',
-            layout: { xs: 5 },
-            onClick: () => handleUpload('male'),
-        },
-        {
-            title: 'Female',
-            id: 'female',
-            layout: { xs: 5 },
-            onClick: () => handleUpload('female'),
-        },
-        {
-            title: 'Old',
-            id: 'old',
-            layout: { xs: 5 },
-            onClick: () => handleUpload('old'),
-        },
-    ];
 
     return (
         <Row>
@@ -112,34 +54,10 @@ const Uploader: React.FC<iProps> = ({ context }) => {
                                 beforeUpload={handleLoadImage}
                                 onRemove={handleRemove}
                             >
-                                {!uploadFile && (
-                                    <Button disabled={loading}>+ Upload</Button>
-                                )}
+                                {!uploadFile && <Button>+ Upload</Button>}
                             </Upload>
                         </ImgCrop>
                     </UploadWrapper>
-                </Row>
-            </Col>
-            <Col xs={24}>
-                <Row justify="center">
-                    {submitButtons.map(({ title, id, onClick, layout }) => (
-                        <Col
-                            {...layout}
-                            key={id}
-                            style={{
-                                margin: '15px 10px',
-                            }}
-                        >
-                            <Button
-                                type="primary"
-                                onClick={onClick}
-                                disabled={!uploadFile || loading}
-                                block
-                            >
-                                {title}
-                            </Button>
-                        </Col>
-                    ))}
                 </Row>
             </Col>
         </Row>
